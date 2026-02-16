@@ -1,19 +1,21 @@
-# Agent.md — Résolutions et consignes internes
+# Agent.md — Résolutions et plan de continuité
 
-## Analyse des échecs précédents
-Le commit précédent avait rétabli un build minimal mais avec trop de stubs simplifiés, ce qui dégradait la logique métier (Gemini réel, expressions, cadeaux).
+## Problèmes corrigés dans cette itération
+1. Bouton focus/conversation ambigu : maintenant il masque/réaffiche explicitement l'historique.
+2. Expressions avatar : association améliorée via détection sur la conversation (question + réponse) et mapping complet 1..20.
+3. Clé Gemini configurable côté utilisateur : ajout du champ dans Paramètres + stockage local.
+4. Voix féminines FR/JP : sélection automatique par langue avec fallback navigateur.
 
-## Corrections appliquées
-1. `geminiService` réécrit avec appel réel Gemini + parsing JSON robuste.
-2. `expressionImageService` complété (mapping 1..20, détection texte, image path).
-3. `SettingsHub` enrichi (profil, voix, cadeaux, import/export, sync emails).
-4. `Avatar` amélioré pour utiliser les images d'expressions avec fallback emoji.
-5. `ollamaService` rendu opérationnel (tentative HTTP locale + throw en erreur).
-6. Fallback IA consolidé dans `App.tsx` : Ollama -> coherent -> simple -> local.
-7. Correction d'un bug de double synthèse vocale et prise en compte fiable des points cadeaux.
+## Décisions techniques
+- `geminiApiKey` stockée localement (`localStorage`) et utilisée en priorité sur les variables d'environnement.
+- `speechService` tente d'abord la voix préférée, puis détecte une voix féminine par heuristiques de nom/langue.
+- Fallback IA préservé : Ollama → IA locale cohérente → fallback simple.
 
-## Règle pour prochaines exécutions
-- Toujours vérifier d'abord si les imports manquants cachent des fonctionnalités métier attendues.
-- Prioriser la restauration fonctionnelle réelle (pas seulement compilation).
-- Valider systématiquement : `npm run build`, `npm run dev`, capture Playwright.
-- Si la structure DB change : créer/mettre à jour `last_update.sql` selon la convention projet.
+## Vérifications à toujours exécuter
+- `npm run build`
+- `npm run dev -- --host 0.0.0.0 --port 3001`
+- Capture Playwright après modification UI
+
+## Rappel DB
+- Aucun schéma SQL actif dans ce projet.
+- Si une DB est ajoutée/modifiée : créer/mettre à jour `last_update.sql` (et archiver vers `last_update_old.sql` si nécessaire).

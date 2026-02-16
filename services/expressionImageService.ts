@@ -31,12 +31,17 @@ const EMOTION_TO_NUMBER: Partial<Record<Emotion, number>> = Object.entries(EXPRE
 function pickByKeywords(text: string): number {
   const t = text.toLowerCase();
   if (/bonjour|salut|coucou|welcome|bienvenue/.test(t)) return 6;
-  if (/merci|bravo|super|génial|excellent/.test(t)) return 8;
-  if (/triste|déçu|peine|pleure/.test(t)) return 14;
-  if (/col[eè]re|énerv|fâch|rage/.test(t)) return 15;
+  if (/merci|bravo|super|génial|excellent|parfait/.test(t)) return 8;
+  if (/triste|déçu|peine|pleure|chagrin/.test(t)) return 14;
+  if (/col[eè]re|énerv|fâch|rage|furieu/.test(t)) return 15;
   if (/peur|effray|angoiss|terrifi/.test(t)) return 18;
-  if (/choqu|incroyable|impossible/.test(t)) return 20;
-  if (/confus|erreur|bug|comprends pas/.test(t)) return 12;
+  if (/choqu|incroyable|impossible|quoi\?/.test(t)) return 20;
+  if (/confus|erreur|bug|comprends pas|incohérent/.test(t)) return 12;
+  if (/fatigu|sommeil|dormir|nuit/.test(t)) return 10;
+  if (/hmm|réfléch|analy|pense/.test(t)) return 4;
+  if (/ok|d'accord|oui|validé/.test(t)) return 13;
+  if (/beurk|d[ée]go[uû]t|grimace/.test(t)) return 17;
+  if (/gên|embarrass|malaise/.test(t)) return 19;
   if (/\?/.test(t)) return 5;
   if (/\!/.test(t)) return 3;
   return 2;
@@ -56,6 +61,11 @@ export const expressionImageService = {
     return EMOTION_TO_NUMBER[emotion] ?? 2;
   },
   detectExpressionNumberFromText(text: string): number {
-    return pickByKeywords(text);
+    return pickByKeywords(text || '');
+  },
+  detectExpressionNumberFromConversation(userText: string, aiText: string): number {
+    const aiBased = pickByKeywords(aiText || '');
+    if (aiBased !== 2) return aiBased;
+    return pickByKeywords(userText || '');
   }
 };

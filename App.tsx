@@ -24,7 +24,8 @@ const STORAGE_KEYS = {
     IMAGES: 'rem_idol_images_v3',
     SETTINGS: 'rem_idol_voice_v3',
     MESSAGES: 'rem_idol_messages_v1',
-    AVATAR_STATE: 'rem_idol_avatar_state_v1'
+    AVATAR_STATE: 'rem_idol_avatar_state_v1',
+    GEMINI_KEY: 'rem_idol_gemini_key_v1'
 };
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -56,6 +57,7 @@ const DEFAULT_VOICE: VoiceSettings = {
     enabled: true,
     pitch: 1.1, 
     rate: 1.0, // Retour à la vitesse normale
+    voiceName: '',
     elevenLabs: { enabled: false, apiKey: '', voiceId: '' },
     tiktok: { enabled: false, voiceId: 'fr_001' }
 };
@@ -84,6 +86,7 @@ export default function App() {
     const [mode, setMode] = useState<InteractionMode>(InteractionMode.STANDARD);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [useLocalAI, setUseLocalAI] = useState(true); // true = IA locale, false = Gemini API
+    const [geminiApiKey, setGeminiApiKey] = useState('');
     
     const lastAlarmFiredRef = useRef<string | null>(null);
     const initialGreetingDone = useRef(false);
@@ -199,6 +202,7 @@ export default function App() {
         const savedImages = localStorage.getItem(STORAGE_KEYS.IMAGES);
         const savedMessages = localStorage.getItem(STORAGE_KEYS.MESSAGES);
         const savedAvatarState = localStorage.getItem(STORAGE_KEYS.AVATAR_STATE);
+        const savedGeminiKey = localStorage.getItem(STORAGE_KEYS.GEMINI_KEY);
 
         let profile = DEFAULT_PROFILE;
         if (savedProfile) {
@@ -210,6 +214,7 @@ export default function App() {
         setUserProfile(profile);
         
         if (savedVoice) try { setVoiceSettings({ ...DEFAULT_VOICE, ...JSON.parse(savedVoice) }); } catch(e){}
+        if (savedGeminiKey) setGeminiApiKey(savedGeminiKey);
         if (savedImages) {
             try {
                 const parsedImages = JSON.parse(savedImages);
@@ -307,7 +312,8 @@ export default function App() {
             profile: userProfile,
             settings: voiceSettings,
             images: avatarState.customImages || {},
-            messages
+            messages,
+            geminiApiKey
         };
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -324,6 +330,7 @@ export default function App() {
         const settingsData = hasEnvelope ? data.settings : undefined;
         const imagesData = hasEnvelope ? data.images : undefined;
         const messagesData = hasEnvelope ? data.messages : undefined;
+        const geminiKeyData = hasEnvelope ? data.geminiApiKey : undefined;
 
         if (profileData && typeof profileData === 'object') {
             const nextProfile: UserProfile = {
@@ -349,6 +356,11 @@ export default function App() {
         if (imagesData && typeof imagesData === 'object' && !Array.isArray(imagesData)) {
             setAvatarState(prev => ({ ...prev, customImages: imagesData }));
             localStorage.setItem(STORAGE_KEYS.IMAGES, JSON.stringify(imagesData));
+        }
+
+        if (typeof geminiKeyData === 'string') {
+            setGeminiApiKey(geminiKeyData);
+            localStorage.setItem(STORAGE_KEYS.GEMINI_KEY, geminiKeyData);
         }
 
         if (Array.isArray(messagesData)) {
@@ -482,7 +494,10 @@ export default function App() {
                     console.log('🔄 Réponse fallback locale:', res);
                 }
             } else {
-                res = await sendMessageToGemini(messageText, language, userProfile);
+                if (!geminiApiKey && !(process.env.GEMINI_API_KEY || process.env.API_KEY)) {
+                    throw new Error('Clé Gemini absente. Ajoutez-la dans Paramètres > API Gemini.');
+                }
+                res = await sendMessageToGemini(messageText, language, userProfile, geminiApiKey);
                 console.log('✅ Réponse générée par Gemini:', res);
             }
             
@@ -499,7 +514,7 @@ export default function App() {
             
             // Ajouter le message avec expression
             const fallbackExpr = getExpressionInfoFromEmotion(res.emotion);
-            const expressionNumber = (res as any).expressionNumber ?? fallbackExpr.number;
+            const expressionNumber = (res as any).expressionNumber ?? expressionImageService.detectExpressionNumberFromConversation(messageText, res.text) ?? fallbackExpr.number;
             const expressionName = (res as any).expressionName ?? (expressionImageService.getName(expressionNumber) || fallbackExpr.name);
             const jpNorm = language === Language.JP ? normalizeJPMessage(res.text, (res as any).translation) : undefined;
             const finalAiText = language === Language.JP ? jpNorm!.text : res.text;
@@ -592,7 +607,10 @@ export default function App() {
                     if (!res?.text) res = generateLocalResponse(greetingType, profile, language);
                 }
             } else {
-                res = await sendMessageToGemini(greetingType, language, profile);
+                if (!geminiApiKey && !(process.env.GEMINI_API_KEY || process.env.API_KEY)) {
+                    throw new Error('Clé Gemini absente. Ajoutez-la dans Paramètres > API Gemini.');
+                }
+                res = await sendMessageToGemini(greetingType, language, profile, geminiApiKey);
             }
             
             const greetExpr = getExpressionInfoFromEmotion(res.emotion);
@@ -713,7 +731,7 @@ export default function App() {
                 </div>
             )}
 
-            <div className={`absolute inset-0 flex items-center justify-center transition-all duration-1000 ${chatFocus ? 'opacity-10 blur-2xl scale-90' : 'opacity-100 scale-100'}`}>
+            <div className={`absolute inset-0 flex items-center justify-center transition-all duration-1000 ${chatFocus ? 'opacity-100 scale-100' : 'opacity-90 scale-100'}`}>
                 <Avatar 
                     state={avatarState} 
                     isAvatarOnlyView={!chatFocus}
@@ -723,14 +741,20 @@ export default function App() {
             {!avatarState.isNightMode && (
                 <>
                     <div className="flex-1 relative z-50 flex flex-col justify-end overflow-hidden">
+                        {!chatFocus ? (
                         <ChatHistory
                             messages={messages}
                             theme={Theme.SOFT_PINK}
-                            onFocus={() => setChatFocus(true)}
+                            onFocus={() => {}}
                             isFocused={chatFocus}
                             isLoading={isAILoading}
                             allowThoughtPeek={userProfile.allowThoughtPeek}
                         />
+                        ) : (
+                        <div className="mx-auto mt-24 w-full max-w-3xl rounded-xl bg-white/60 px-4 py-3 text-center text-xs text-rose-700">
+                            Conversation masquée (bouton Conversation pour réafficher).
+                        </div>
+                        )}
                     </div>
                     <div className="relative w-full z-[60] pb-6 px-4">
                         <ChatControls
@@ -788,6 +812,8 @@ export default function App() {
                 onClearConversation={clearConversation}
                 onExportUserData={exportUserData}
                 onImportUserData={importUserData}
+                geminiApiKey={geminiApiKey}
+                onUpdateGeminiApiKey={(key) => { setGeminiApiKey(key); localStorage.setItem(STORAGE_KEYS.GEMINI_KEY, key); }}
             />
         </div>
     );

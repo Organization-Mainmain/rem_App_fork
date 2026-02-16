@@ -25,7 +25,7 @@ export default function ChatControls(props: Props) {
         <button onClick={props.toggleLanguage} className="rounded bg-rose-100 px-2 py-1">Langue: {props.language === Language.FR ? 'FR' : 'JP'}</button>
         <button onClick={props.toggleMode} className="rounded bg-rose-100 px-2 py-1">Mode: {props.mode === InteractionMode.STANDARD ? 'Standard' : 'Continu'}</button>
         <button onClick={props.toggleListening} className="rounded bg-rose-100 px-2 py-1">Mic: {props.isListening ? 'ON' : 'OFF'}</button>
-        <button onClick={props.toggleChatFocus} className="rounded bg-rose-100 px-2 py-1">Focus: {props.isChatFocused ? 'ON' : 'OFF'}</button>
+        <button onClick={props.toggleChatFocus} className="rounded bg-rose-100 px-2 py-1">Conversation: {props.isChatFocused ? 'Cachée' : 'Visible'}</button>
         <span className="ml-auto text-[11px] text-rose-700">Avatar: {props.avatarName}</span>
       </div>
       <div className="flex gap-2">

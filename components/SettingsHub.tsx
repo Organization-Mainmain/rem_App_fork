@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Emotion, Gift, UserProfile, VoiceSettings } from '../types';
 
 const GIFTS: Gift[] = [
@@ -23,11 +23,37 @@ type Props = {
   onClearConversation: () => void;
   onExportUserData: () => void;
   onImportUserData: (data: any) => void;
+  geminiApiKey: string;
+  onUpdateGeminiApiKey: (key: string) => void;
 };
 
-export default function SettingsHub({ isOpen, onClose, profile, settings, onUpdateProfile, onUpdateSettings, onSendGift, onSyncEmails, onClearConversation, onExportUserData, onImportUserData }: Props) {
+export default function SettingsHub({
+  isOpen,
+  onClose,
+  profile,
+  settings,
+  onUpdateProfile,
+  onUpdateSettings,
+  onSendGift,
+  onSyncEmails,
+  onClearConversation,
+  onExportUserData,
+  onImportUserData,
+  geminiApiKey,
+  onUpdateGeminiApiKey
+}: Props) {
   const [localName, setLocalName] = useState(profile.name || '');
   const [localAvatarName, setLocalAvatarName] = useState(profile.avatarName || 'Rem-san');
+  const [localGeminiKey, setLocalGeminiKey] = useState(geminiApiKey || '');
+
+  useEffect(() => {
+    setLocalName(profile.name || '');
+    setLocalAvatarName(profile.avatarName || 'Rem-san');
+  }, [profile.name, profile.avatarName]);
+
+  useEffect(() => {
+    setLocalGeminiKey(geminiApiKey || '');
+  }, [geminiApiKey]);
 
   const friendshipLabel = useMemo(() => {
     const v = profile.friendshipLevel || 0;
@@ -60,11 +86,34 @@ export default function SettingsHub({ isOpen, onClose, profile, settings, onUpda
         </section>
 
         <section className="mt-4 rounded-xl border p-3">
-          <h3 className="text-sm font-semibold">Voix</h3>
+          <h3 className="text-sm font-semibold">API Gemini</h3>
+          <input
+            type="password"
+            value={localGeminiKey}
+            onChange={(e) => setLocalGeminiKey(e.target.value)}
+            placeholder="Collez votre clé Gemini"
+            className="mt-2 w-full rounded border px-2 py-1"
+          />
+          <button
+            onClick={() => onUpdateGeminiApiKey(localGeminiKey.trim())}
+            className="mt-2 rounded bg-indigo-600 px-3 py-1 text-sm text-white"
+          >
+            Sauvegarder la clé API
+          </button>
+        </section>
+
+        <section className="mt-4 rounded-xl border p-3">
+          <h3 className="text-sm font-semibold">Voix féminines FR/JP</h3>
           <label className="mt-2 flex items-center gap-2 text-sm">
             <input type="checkbox" checked={settings.enabled} onChange={(e) => onUpdateSettings({ ...settings, enabled: e.target.checked })} />
             Activer la synthèse vocale
           </label>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button onClick={() => onUpdateSettings({ ...settings, voiceName: 'Google français' })} className="rounded bg-rose-100 px-2 py-1 text-xs">Preset FR féminin</button>
+            <button onClick={() => onUpdateSettings({ ...settings, voiceName: 'Google 日本語' })} className="rounded bg-rose-100 px-2 py-1 text-xs">Preset JP féminin</button>
+            <button onClick={() => onUpdateSettings({ ...settings, voiceName: '' })} className="rounded bg-slate-100 px-2 py-1 text-xs">Auto-detect</button>
+          </div>
+          <p className="mt-1 text-xs text-gray-500">Le moteur choisit automatiquement une voix féminine compatible langue, puis fallback navigateur.</p>
         </section>
 
         <section className="mt-4 rounded-xl border p-3">

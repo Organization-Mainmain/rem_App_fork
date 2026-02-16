@@ -78,8 +78,8 @@ function toEmotion(input: string | undefined, fallbackText: string): Emotion {
   return expressionImageService.getEmotion(expressionImageService.detectExpressionNumberFromText(fallbackText));
 }
 
-export async function sendMessageToGemini(message: string, language: Language, profile: UserProfile): Promise<AIResponse> {
-  const apiKey = (process.env.GEMINI_API_KEY || process.env.API_KEY || '').trim();
+export async function sendMessageToGemini(message: string, language: Language, profile: UserProfile, userApiKey?: string): Promise<AIResponse> {
+  const apiKey = (userApiKey || process.env.GEMINI_API_KEY || process.env.API_KEY || '').trim();
   if (!apiKey) throw new Error('GEMINI_API_KEY manquante');
 
   const systemPrompt = buildSystemPrompt(language, profile);

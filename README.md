@@ -1,51 +1,52 @@
 # Rem App (FR/JP) — Avatar conversationnel Gemini
 
-## Objectif produit
-Rem App est une application **frontend React/Vite** d'avatar conversationnel orientée :
-- réponses en **français / japonais**,
-- pilotage via **Google Gemini API** (avec fallback local),
-- affichage d'**expressions numérotées** (1 à 20),
-- système de **cadeaux** qui influence le niveau d'amitié.
+## Objectif
+Application d'avatar conversationnel avec :
+- réponses **français/japonais**,
+- intégration **Gemini API**,
+- expressions visuelles **1 à 20** selon le contexte,
+- système de **cadeaux**,
+- synthèse vocale orientée **voix féminines FR/JP**.
 
-## Architecture actuelle
-- `App.tsx` : orchestration globale (chat, voix, profil, mémoire, alarmes, cadeaux, mode nuit).
-- `components/*` : avatar, historique, contrôles chat, hub de paramètres.
-- `services/geminiService.ts` : appel réel à Gemini (`generateContent`) + parsing JSON robuste.
-- `services/ollamaService.ts` : tentative locale Ollama (`localhost:11434`), fallback géré côté `App.tsx`.
-- `services/expressionImageService.ts` : mapping complet expressions `1..20` + détection heuristique.
+## Architecture
+- `App.tsx` : orchestration chat, état utilisateur, stockage local, alarmes, cadeaux, modes IA.
+- `services/geminiService.ts` : appel Gemini réel avec parsing JSON robuste.
+- `services/expressionImageService.ts` : mapping des 20 expressions + détection conversationnelle.
+- `components/SettingsHub.tsx` : profil, clé API Gemini, voix, cadeaux, import/export.
+- `services/speechService.ts` : sélection automatique de voix féminines selon langue.
 
-## Prérequis
-- Node.js 20+
-- (Optionnel) Ollama local si vous voulez utiliser le mode local avancé
-- Clé Gemini dans `.env.local`
-
-## Installation
+## Installation (frontend)
 ```bash
 npm install
 ```
 
-## Configuration Gemini
-Créez/éditez `.env.local` :
-```env
-GEMINI_API_KEY=VOTRE_CLE_GEMINI
-```
+## Backend / Base de données
+- Aucun backend applicatif ni base SQL dans ce dépôt actuellement.
+- Persistance via `localStorage` (profil, messages, paramètres, clé Gemini).
 
-## Lancer l'application
+## Configuration Gemini
+- Option A: `.env.local`
+```env
+GEMINI_API_KEY=VOTRE_CLE
+```
+- Option B: directement dans l'application :
+  - `Paramètres > API Gemini > Sauvegarder la clé API`.
+
+## Lancer
 ```bash
 npm run dev
 ```
-URL locale : `http://localhost:3001`
+URL: `http://localhost:3001`
 
-## Build de production
+## Build
 ```bash
 npm run build
 ```
 
-## Expressions visuelles
-L'app tente de charger des images dans `public/expressions/1.png` à `20.png`.
-Si une image manque, l'avatar affiche un fallback emoji.
+## Expressions
+L'application utilise `public/expressions/1.png` ... `20.png`.
+Si une image est absente, un fallback emoji est affiché.
 
-## Notes Backend / BDD
-- Ce dépôt ne contient pas de backend applicatif ni schéma SQL actif.
-- Le stockage est principalement en `localStorage`.
-- Donc aucune migration DB n'a été nécessaire dans cette itération.
+## Notes
+- Le bouton **Conversation** permet maintenant de masquer/réafficher clairement l'historique.
+- En mode Gemini, une erreur explicite est levée si aucune clé n'est configurée.
