@@ -1,20 +1,55 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Rem App — Analyse et exécution locale
 
-# Run and deploy your AI Studio app
+## Vue d'ensemble
+Rem App est une application **frontend React + Vite + TypeScript** orientée assistant conversationnel avec avatar, stockage local et modes de réponses IA (Gemini, local, Ollama simulé). Le projet est actuellement **sans backend serveur dédié** ni schéma de base de données relationnelle versionné.
 
-This contains everything you need to run your app locally.
+## Analyse de l'architecture
 
-View your app in AI Studio: https://ai.studio/apps/drive/1HxvFrIA_V4hwqdGwvFcrCjEOY0Wd_LmQ
+### Stack technique
+- **Frontend**: React 19, Vite 6, TypeScript.
+- **UI**: composants maison (`components/*`) avec styles CSS globaux.
+- **Services**: couche d'abstraction IA et utilitaires (`services/*`).
+- **Stockage**: `localStorage` côté navigateur pour profil, messages et configuration.
 
-## Run Locally
+### Points fonctionnels identifiés
+- Chat principal dans `App.tsx`.
+- Gestion d'état utilisateur (profil, voix, expressions, historique).
+- Prise en charge de modes IA multiples (démonstration locale/placeholder).
+- Écran de chargement, historique et panneau de paramètres.
 
-**Prerequisites:**  Node.js
+## Installation et lancement
 
+## 1) Frontend
+Prérequis: Node.js 20+
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+```bash
+npm install
+npm run dev
+```
+
+Application accessible sur: `http://localhost:3001`
+
+## 2) Backend
+Aucun backend applicatif n'est fourni dans ce dépôt.
+
+Si vous souhaitez un backend, vous pouvez en ajouter un service Node/Express ou FastAPI, puis connecter `services/*` à des endpoints HTTP.
+
+## 3) Base de données
+Aucune base de données n'est fournie ni requise pour l'exécution actuelle (stockage local navigateur).
+
+Si une base est ajoutée plus tard, pensez à versionner les migrations SQL et suivre la convention `last_update.sql` demandée.
+
+## Build de production
+```bash
+npm run build
+```
+
+## Structure principale
+- `App.tsx`: orchestrateur principal.
+- `components/`: composants UI.
+- `services/`: services IA, thème, voix, expressions.
+- `types.ts`: types et enums métier.
+- `styles/`: feuilles CSS importées par `index.css`.
+
+## État actuel
+Le projet compile et se lance localement en mode développement et build de production.
