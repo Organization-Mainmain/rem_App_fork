@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Idol Companion</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#ff337a" />
+    <meta name="description" content="Votre compagnon virtuel d'IA avec une personnalité d'idole" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="AI Idol" />
+    <meta name="application-name" content="AI Idol Companion" />
+    <meta name="msapplication-TileColor" content="#ff337a" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#ff337a" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Nunito"', 'sans-serif'],
+              display: ['"M PLUS Rounded 1c"', 'sans-serif'],
+            },
+            colors: {
+              idol: {
+                50: '#fff0f5',
+                100: '#ffe4ef',
+                200: '#ffcce2',
+                300: '#ff9ec5',
+                400: '#ff669e',
+                500: '#ff337a',
+                600: '#e60050',
+              },
+              glass: 'rgba(255, 255, 255, 0.7)',
+              glassBorder: 'rgba(255, 255, 255, 0.5)',
+            },
+            animation: {
+              'breathe': 'breathe 4s ease-in-out infinite',
+              'talk': 'talk 0.3s ease-in-out infinite',
+              'float': 'float 6s ease-in-out infinite',
+            },
+            keyframes: {
+              breathe: {
+                '0%, 100%': { transform: 'scale(1) translateY(0)' },
+                '50%': { transform: 'scale(1.02) translateY(-5px)' },
+              },
+              talk: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-2px)' },
+              },
+              float: {
+                 '0%, 100%': { transform: 'translateY(0)' },
+                 '50%': { transform: 'translateY(-10px)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+        overflow: hidden; /* Prevent scrolling on mobile for app-like feel */
+      }
+      /* Custom scrollbar for chat */
+      .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+      }
+      .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+      }
+      .mask-image-gradient {
+        mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+        -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+      }
+      /* Glassmorphism utility */
+      .glass-panel {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('Service Worker enregistré avec succès:', registration);
+          })
+          .catch((error) => {
+            console.log('Erreur d\'enregistrement du Service Worker:', error);
+          });
+      });
+    }
+  </script>
+</body>
+</html>
