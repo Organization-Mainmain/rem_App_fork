@@ -473,7 +473,13 @@ export default function App() {
                 } catch (error) {
                     console.log('❌ Ollama indisponible, fallback vers IA cohérente:', error);
                     res = coherentLocalAI.generateResponse(messageText, userProfile, language);
-                    console.log('🔄 Réponse fallback IA cohérente:', res);
+                    if (!res?.text) {
+                        res = simpleLocalAI.generateResponse(messageText, userProfile, language);
+                    }
+                    if (!res?.text) {
+                        res = generateLocalResponse(messageText, userProfile, language);
+                    }
+                    console.log('🔄 Réponse fallback locale:', res);
                 }
             } else {
                 res = await sendMessageToGemini(messageText, language, userProfile);
@@ -510,8 +516,11 @@ export default function App() {
             handleSpeak(finalAiText);
             
             // Gérer la mémoire et l'amitié
-            if ((res as any).newMemory || (res as any).newCoreMemory || (res as any).traitDeltas || res.friendshipChange) {
+            if (giftValue > 0 || (res as any).newMemory || (res as any).newCoreMemory || (res as any).traitDeltas || res.friendshipChange) {
                 const updatedProfile = { ...userProfile };
+                if (giftValue > 0) {
+                    updatedProfile.friendshipLevel = Math.min(100, Math.max(0, (updatedProfile.friendshipLevel || 0) + giftValue));
+                }
                 if ((res as any).newMemory) {
                     updatedProfile.memories = [...(updatedProfile.memories || []), (res as any).newMemory];
                 }
@@ -535,8 +544,6 @@ export default function App() {
                 localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(updatedProfile));
             }
             
-            // Synthèse vocale
-            handleSpeak(res.text);
             
         } catch (error) {
             console.error('Erreur lors de l\'envoi du message:', error);
@@ -581,6 +588,8 @@ export default function App() {
                 } catch (error) {
                     console.log('❌ Ollama indisponible, fallback vers IA cohérente');
                     res = coherentLocalAI.generateResponse(greetingType, profile, language);
+                    if (!res?.text) res = simpleLocalAI.generateResponse(greetingType, profile, language);
+                    if (!res?.text) res = generateLocalResponse(greetingType, profile, language);
                 }
             } else {
                 res = await sendMessageToGemini(greetingType, language, profile);
@@ -686,6 +695,13 @@ export default function App() {
                     >
                         <Moon size={24} />
                     </button>
+                    <button
+                        onClick={() => setUseLocalAI(prev => !prev)}
+                        className="px-3 rounded-full bg-white/80 border border-rose-200 text-[10px] font-bold text-rose-700"
+                        title="Basculer entre IA locale et Gemini"
+                    >
+                        {useLocalAI ? 'IA locale' : 'Gemini'}
+                    </button>
                     <button 
                         onClick={() => setIsHubOpen(true)} 
                         className={`p-3 rounded-full shadow-lg ${themeStyles.buttonPrimary}`}
@@ -756,7 +772,19 @@ export default function App() {
                     reader.readAsDataURL(file);
                 }}
                 onSendGift={(gift) => handleSend(`[GREETING: ${typeof gift === 'string' ? gift : gift.name}]`, typeof gift === 'string' ? 5 : gift.points)}
-                onSyncEmails={() => {}}
+                onSyncEmails={async () => {
+                    try {
+                        const emails = await fetchUnreadEmails();
+                        if (emails.length === 0) {
+                            setMessages(prev => [...prev, { id: `mail-${Date.now()}`, text: 'Aucun email non lu détecté pour le moment.', speaker: Speaker.AI, timestamp: Date.now(), emotion: Emotion.WAITING }]);
+                            return;
+                        }
+                        const summary = emails.slice(0, 5).map(e => `• ${e.subject} (${e.sender})`).join('\n');
+                        setMessages(prev => [...prev, { id: `mail-${Date.now()}`, text: `Emails non lus:\n${summary}`, speaker: Speaker.AI, timestamp: Date.now(), emotion: Emotion.APPRECIATIVE }]);
+                    } catch (e) {
+                        setMessages(prev => [...prev, { id: `mail-err-${Date.now()}`, text: 'Impossible de synchroniser les emails.', speaker: Speaker.AI, timestamp: Date.now(), emotion: Emotion.CONFUSION }]);
+                    }
+                }}
                 onClearConversation={clearConversation}
                 onExportUserData={exportUserData}
                 onImportUserData={importUserData}

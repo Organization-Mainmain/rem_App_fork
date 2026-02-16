@@ -1,20 +1,51 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Rem App (FR/JP) — Avatar conversationnel Gemini
 
-# Run and deploy your AI Studio app
+## Objectif produit
+Rem App est une application **frontend React/Vite** d'avatar conversationnel orientée :
+- réponses en **français / japonais**,
+- pilotage via **Google Gemini API** (avec fallback local),
+- affichage d'**expressions numérotées** (1 à 20),
+- système de **cadeaux** qui influence le niveau d'amitié.
 
-This contains everything you need to run your app locally.
+## Architecture actuelle
+- `App.tsx` : orchestration globale (chat, voix, profil, mémoire, alarmes, cadeaux, mode nuit).
+- `components/*` : avatar, historique, contrôles chat, hub de paramètres.
+- `services/geminiService.ts` : appel réel à Gemini (`generateContent`) + parsing JSON robuste.
+- `services/ollamaService.ts` : tentative locale Ollama (`localhost:11434`), fallback géré côté `App.tsx`.
+- `services/expressionImageService.ts` : mapping complet expressions `1..20` + détection heuristique.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1HxvFrIA_V4hwqdGwvFcrCjEOY0Wd_LmQ
+## Prérequis
+- Node.js 20+
+- (Optionnel) Ollama local si vous voulez utiliser le mode local avancé
+- Clé Gemini dans `.env.local`
 
-## Run Locally
+## Installation
+```bash
+npm install
+```
 
-**Prerequisites:**  Node.js
+## Configuration Gemini
+Créez/éditez `.env.local` :
+```env
+GEMINI_API_KEY=VOTRE_CLE_GEMINI
+```
 
+## Lancer l'application
+```bash
+npm run dev
+```
+URL locale : `http://localhost:3001`
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Build de production
+```bash
+npm run build
+```
+
+## Expressions visuelles
+L'app tente de charger des images dans `public/expressions/1.png` à `20.png`.
+Si une image manque, l'avatar affiche un fallback emoji.
+
+## Notes Backend / BDD
+- Ce dépôt ne contient pas de backend applicatif ni schéma SQL actif.
+- Le stockage est principalement en `localStorage`.
+- Donc aucune migration DB n'a été nécessaire dans cette itération.
