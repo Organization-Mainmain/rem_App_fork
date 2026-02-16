@@ -151,6 +151,7 @@ export interface VoiceSettings {
     pitch: number;
     rate: number;
     voiceName?: string; // Nom de la voix système préférée
+    geminiApiKey?: string; // Clé API Gemini saisie par l'utilisateur
     elevenLabs: { enabled: boolean; apiKey: string; voiceId: string; };
     tiktok: { enabled: boolean; voiceId: string; };
 }

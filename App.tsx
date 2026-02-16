@@ -24,7 +24,8 @@ const STORAGE_KEYS = {
     IMAGES: 'rem_idol_images_v3',
     SETTINGS: 'rem_idol_voice_v3',
     MESSAGES: 'rem_idol_messages_v1',
-    AVATAR_STATE: 'rem_idol_avatar_state_v1'
+    AVATAR_STATE: 'rem_idol_avatar_state_v1',
+    GEMINI_KEY: 'rem_idol_gemini_key_v1'
 };
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -56,6 +57,7 @@ const DEFAULT_VOICE: VoiceSettings = {
     enabled: true,
     pitch: 1.1, 
     rate: 1.0, // Retour à la vitesse normale
+    voiceName: '',
     elevenLabs: { enabled: false, apiKey: '', voiceId: '' },
     tiktok: { enabled: false, voiceId: 'fr_001' }
 };
@@ -84,6 +86,7 @@ export default function App() {
     const [mode, setMode] = useState<InteractionMode>(InteractionMode.STANDARD);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [useLocalAI, setUseLocalAI] = useState(true); // true = IA locale, false = Gemini API
+    const [geminiApiKey, setGeminiApiKey] = useState('');
     
     const lastAlarmFiredRef = useRef<string | null>(null);
     const initialGreetingDone = useRef(false);
@@ -199,6 +202,7 @@ export default function App() {
         const savedImages = localStorage.getItem(STORAGE_KEYS.IMAGES);
         const savedMessages = localStorage.getItem(STORAGE_KEYS.MESSAGES);
         const savedAvatarState = localStorage.getItem(STORAGE_KEYS.AVATAR_STATE);
+        const savedGeminiKey = localStorage.getItem(STORAGE_KEYS.GEMINI_KEY);
 
         let profile = DEFAULT_PROFILE;
         if (savedProfile) {
@@ -210,6 +214,7 @@ export default function App() {
         setUserProfile(profile);
         
         if (savedVoice) try { setVoiceSettings({ ...DEFAULT_VOICE, ...JSON.parse(savedVoice) }); } catch(e){}
+        if (savedGeminiKey) setGeminiApiKey(savedGeminiKey);
         if (savedImages) {
             try {
                 const parsedImages = JSON.parse(savedImages);
@@ -307,7 +312,8 @@ export default function App() {
             profile: userProfile,
             settings: voiceSettings,
             images: avatarState.customImages || {},
-            messages
+            messages,
+            geminiApiKey
         };
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -324,6 +330,7 @@ export default function App() {
         const settingsData = hasEnvelope ? data.settings : undefined;
         const imagesData = hasEnvelope ? data.images : undefined;
         const messagesData = hasEnvelope ? data.messages : undefined;
+        const geminiKeyData = hasEnvelope ? data.geminiApiKey : undefined;
 
         if (profileData && typeof profileData === 'object') {
             const nextProfile: UserProfile = {
@@ -349,6 +356,11 @@ export default function App() {
         if (imagesData && typeof imagesData === 'object' && !Array.isArray(imagesData)) {
             setAvatarState(prev => ({ ...prev, customImages: imagesData }));
             localStorage.setItem(STORAGE_KEYS.IMAGES, JSON.stringify(imagesData));
+        }
+
+        if (typeof geminiKeyData === 'string') {
+            setGeminiApiKey(geminiKeyData);
+            localStorage.setItem(STORAGE_KEYS.GEMINI_KEY, geminiKeyData);
         }
 
         if (Array.isArray(messagesData)) {
@@ -473,10 +485,19 @@ export default function App() {
                 } catch (error) {
                     console.log('❌ Ollama indisponible, fallback vers IA cohérente:', error);
                     res = coherentLocalAI.generateResponse(messageText, userProfile, language);
-                    console.log('🔄 Réponse fallback IA cohérente:', res);
+                    if (!res?.text) {
+                        res = simpleLocalAI.generateResponse(messageText, userProfile, language);
+                    }
+                    if (!res?.text) {
+                        res = generateLocalResponse(messageText, userProfile, language);
+                    }
+                    console.log('🔄 Réponse fallback locale:', res);
                 }
             } else {
-                res = await sendMessageToGemini(messageText, language, userProfile);
+                if (!geminiApiKey && !(process.env.GEMINI_API_KEY || process.env.API_KEY)) {
+                    throw new Error('Clé Gemini absente. Ajoutez-la dans Paramètres > API Gemini.');
+                }
+                res = await sendMessageToGemini(messageText, language, userProfile, geminiApiKey);
                 console.log('✅ Réponse générée par Gemini:', res);
             }
             
@@ -493,7 +514,7 @@ export default function App() {
             
             // Ajouter le message avec expression
             const fallbackExpr = getExpressionInfoFromEmotion(res.emotion);
-            const expressionNumber = (res as any).expressionNumber ?? fallbackExpr.number;
+            const expressionNumber = (res as any).expressionNumber ?? expressionImageService.detectExpressionNumberFromConversation(messageText, res.text) ?? fallbackExpr.number;
             const expressionName = (res as any).expressionName ?? (expressionImageService.getName(expressionNumber) || fallbackExpr.name);
             const jpNorm = language === Language.JP ? normalizeJPMessage(res.text, (res as any).translation) : undefined;
             const finalAiText = language === Language.JP ? jpNorm!.text : res.text;
@@ -510,8 +531,11 @@ export default function App() {
             handleSpeak(finalAiText);
             
             // Gérer la mémoire et l'amitié
-            if ((res as any).newMemory || (res as any).newCoreMemory || (res as any).traitDeltas || res.friendshipChange) {
+            if (giftValue > 0 || (res as any).newMemory || (res as any).newCoreMemory || (res as any).traitDeltas || res.friendshipChange) {
                 const updatedProfile = { ...userProfile };
+                if (giftValue > 0) {
+                    updatedProfile.friendshipLevel = Math.min(100, Math.max(0, (updatedProfile.friendshipLevel || 0) + giftValue));
+                }
                 if ((res as any).newMemory) {
                     updatedProfile.memories = [...(updatedProfile.memories || []), (res as any).newMemory];
                 }
@@ -535,8 +559,6 @@ export default function App() {
                 localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(updatedProfile));
             }
             
-            // Synthèse vocale
-            handleSpeak(res.text);
             
         } catch (error) {
             console.error('Erreur lors de l\'envoi du message:', error);
@@ -581,9 +603,14 @@ export default function App() {
                 } catch (error) {
                     console.log('❌ Ollama indisponible, fallback vers IA cohérente');
                     res = coherentLocalAI.generateResponse(greetingType, profile, language);
+                    if (!res?.text) res = simpleLocalAI.generateResponse(greetingType, profile, language);
+                    if (!res?.text) res = generateLocalResponse(greetingType, profile, language);
                 }
             } else {
-                res = await sendMessageToGemini(greetingType, language, profile);
+                if (!geminiApiKey && !(process.env.GEMINI_API_KEY || process.env.API_KEY)) {
+                    throw new Error('Clé Gemini absente. Ajoutez-la dans Paramètres > API Gemini.');
+                }
+                res = await sendMessageToGemini(greetingType, language, profile, geminiApiKey);
             }
             
             const greetExpr = getExpressionInfoFromEmotion(res.emotion);
@@ -686,6 +713,13 @@ export default function App() {
                     >
                         <Moon size={24} />
                     </button>
+                    <button
+                        onClick={() => setUseLocalAI(prev => !prev)}
+                        className="px-3 rounded-full bg-white/80 border border-rose-200 text-[10px] font-bold text-rose-700"
+                        title="Basculer entre IA locale et Gemini"
+                    >
+                        {useLocalAI ? 'IA locale' : 'Gemini'}
+                    </button>
                     <button 
                         onClick={() => setIsHubOpen(true)} 
                         className={`p-3 rounded-full shadow-lg ${themeStyles.buttonPrimary}`}
@@ -697,7 +731,7 @@ export default function App() {
                 </div>
             )}
 
-            <div className={`absolute inset-0 flex items-center justify-center transition-all duration-1000 ${chatFocus ? 'opacity-10 blur-2xl scale-90' : 'opacity-100 scale-100'}`}>
+            <div className={`absolute inset-0 flex items-center justify-center transition-all duration-1000 ${chatFocus ? 'opacity-100 scale-100' : 'opacity-90 scale-100'}`}>
                 <Avatar 
                     state={avatarState} 
                     isAvatarOnlyView={!chatFocus}
@@ -707,14 +741,20 @@ export default function App() {
             {!avatarState.isNightMode && (
                 <>
                     <div className="flex-1 relative z-50 flex flex-col justify-end overflow-hidden">
+                        {!chatFocus ? (
                         <ChatHistory
                             messages={messages}
                             theme={Theme.SOFT_PINK}
-                            onFocus={() => setChatFocus(true)}
+                            onFocus={() => {}}
                             isFocused={chatFocus}
                             isLoading={isAILoading}
                             allowThoughtPeek={userProfile.allowThoughtPeek}
                         />
+                        ) : (
+                        <div className="mx-auto mt-24 w-full max-w-3xl rounded-xl bg-white/60 px-4 py-3 text-center text-xs text-rose-700">
+                            Conversation masquée (bouton Conversation pour réafficher).
+                        </div>
+                        )}
                     </div>
                     <div className="relative w-full z-[60] pb-6 px-4">
                         <ChatControls
@@ -756,10 +796,24 @@ export default function App() {
                     reader.readAsDataURL(file);
                 }}
                 onSendGift={(gift) => handleSend(`[GREETING: ${typeof gift === 'string' ? gift : gift.name}]`, typeof gift === 'string' ? 5 : gift.points)}
-                onSyncEmails={() => {}}
+                onSyncEmails={async () => {
+                    try {
+                        const emails = await fetchUnreadEmails();
+                        if (emails.length === 0) {
+                            setMessages(prev => [...prev, { id: `mail-${Date.now()}`, text: 'Aucun email non lu détecté pour le moment.', speaker: Speaker.AI, timestamp: Date.now(), emotion: Emotion.WAITING }]);
+                            return;
+                        }
+                        const summary = emails.slice(0, 5).map(e => `• ${e.subject} (${e.sender})`).join('\n');
+                        setMessages(prev => [...prev, { id: `mail-${Date.now()}`, text: `Emails non lus:\n${summary}`, speaker: Speaker.AI, timestamp: Date.now(), emotion: Emotion.APPRECIATIVE }]);
+                    } catch (e) {
+                        setMessages(prev => [...prev, { id: `mail-err-${Date.now()}`, text: 'Impossible de synchroniser les emails.', speaker: Speaker.AI, timestamp: Date.now(), emotion: Emotion.CONFUSION }]);
+                    }
+                }}
                 onClearConversation={clearConversation}
                 onExportUserData={exportUserData}
                 onImportUserData={importUserData}
+                geminiApiKey={geminiApiKey}
+                onUpdateGeminiApiKey={(key) => { setGeminiApiKey(key); localStorage.setItem(STORAGE_KEYS.GEMINI_KEY, key); }}
             />
         </div>
     );

@@ -1,20 +1,52 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Rem App (FR/JP) — Avatar conversationnel Gemini
 
-# Run and deploy your AI Studio app
+## Objectif
+Application d'avatar conversationnel avec :
+- réponses **français/japonais**,
+- intégration **Gemini API**,
+- expressions visuelles **1 à 20** selon le contexte,
+- système de **cadeaux**,
+- synthèse vocale orientée **voix féminines FR/JP**.
 
-This contains everything you need to run your app locally.
+## Architecture
+- `App.tsx` : orchestration chat, état utilisateur, stockage local, alarmes, cadeaux, modes IA.
+- `services/geminiService.ts` : appel Gemini réel avec parsing JSON robuste.
+- `services/expressionImageService.ts` : mapping des 20 expressions + détection conversationnelle.
+- `components/SettingsHub.tsx` : profil, clé API Gemini, voix, cadeaux, import/export.
+- `services/speechService.ts` : sélection automatique de voix féminines selon langue.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1HxvFrIA_V4hwqdGwvFcrCjEOY0Wd_LmQ
+## Installation (frontend)
+```bash
+npm install
+```
 
-## Run Locally
+## Backend / Base de données
+- Aucun backend applicatif ni base SQL dans ce dépôt actuellement.
+- Persistance via `localStorage` (profil, messages, paramètres, clé Gemini).
 
-**Prerequisites:**  Node.js
+## Configuration Gemini
+- Option A: `.env.local`
+```env
+GEMINI_API_KEY=VOTRE_CLE
+```
+- Option B: directement dans l'application :
+  - `Paramètres > API Gemini > Sauvegarder la clé API`.
 
+## Lancer
+```bash
+npm run dev
+```
+URL: `http://localhost:3001`
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Build
+```bash
+npm run build
+```
+
+## Expressions
+L'application utilise `public/expressions/1.png` ... `20.png`.
+Si une image est absente, un fallback emoji est affiché.
+
+## Notes
+- Le bouton **Conversation** permet maintenant de masquer/réafficher clairement l'historique.
+- En mode Gemini, une erreur explicite est levée si aucune clé n'est configurée.
