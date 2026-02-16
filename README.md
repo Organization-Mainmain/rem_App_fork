@@ -1,55 +1,51 @@
-# Rem App — Analyse et exécution locale
+# Rem App (FR/JP) — Avatar conversationnel Gemini
 
-## Vue d'ensemble
-Rem App est une application **frontend React + Vite + TypeScript** orientée assistant conversationnel avec avatar, stockage local et modes de réponses IA (Gemini, local, Ollama simulé). Le projet est actuellement **sans backend serveur dédié** ni schéma de base de données relationnelle versionné.
+## Objectif produit
+Rem App est une application **frontend React/Vite** d'avatar conversationnel orientée :
+- réponses en **français / japonais**,
+- pilotage via **Google Gemini API** (avec fallback local),
+- affichage d'**expressions numérotées** (1 à 20),
+- système de **cadeaux** qui influence le niveau d'amitié.
 
-## Analyse de l'architecture
+## Architecture actuelle
+- `App.tsx` : orchestration globale (chat, voix, profil, mémoire, alarmes, cadeaux, mode nuit).
+- `components/*` : avatar, historique, contrôles chat, hub de paramètres.
+- `services/geminiService.ts` : appel réel à Gemini (`generateContent`) + parsing JSON robuste.
+- `services/ollamaService.ts` : tentative locale Ollama (`localhost:11434`), fallback géré côté `App.tsx`.
+- `services/expressionImageService.ts` : mapping complet expressions `1..20` + détection heuristique.
 
-### Stack technique
-- **Frontend**: React 19, Vite 6, TypeScript.
-- **UI**: composants maison (`components/*`) avec styles CSS globaux.
-- **Services**: couche d'abstraction IA et utilitaires (`services/*`).
-- **Stockage**: `localStorage` côté navigateur pour profil, messages et configuration.
+## Prérequis
+- Node.js 20+
+- (Optionnel) Ollama local si vous voulez utiliser le mode local avancé
+- Clé Gemini dans `.env.local`
 
-### Points fonctionnels identifiés
-- Chat principal dans `App.tsx`.
-- Gestion d'état utilisateur (profil, voix, expressions, historique).
-- Prise en charge de modes IA multiples (démonstration locale/placeholder).
-- Écran de chargement, historique et panneau de paramètres.
-
-## Installation et lancement
-
-## 1) Frontend
-Prérequis: Node.js 20+
-
+## Installation
 ```bash
 npm install
-npm run dev
 ```
 
-Application accessible sur: `http://localhost:3001`
+## Configuration Gemini
+Créez/éditez `.env.local` :
+```env
+GEMINI_API_KEY=VOTRE_CLE_GEMINI
+```
 
-## 2) Backend
-Aucun backend applicatif n'est fourni dans ce dépôt.
-
-Si vous souhaitez un backend, vous pouvez en ajouter un service Node/Express ou FastAPI, puis connecter `services/*` à des endpoints HTTP.
-
-## 3) Base de données
-Aucune base de données n'est fournie ni requise pour l'exécution actuelle (stockage local navigateur).
-
-Si une base est ajoutée plus tard, pensez à versionner les migrations SQL et suivre la convention `last_update.sql` demandée.
+## Lancer l'application
+```bash
+npm run dev
+```
+URL locale : `http://localhost:3001`
 
 ## Build de production
 ```bash
 npm run build
 ```
 
-## Structure principale
-- `App.tsx`: orchestrateur principal.
-- `components/`: composants UI.
-- `services/`: services IA, thème, voix, expressions.
-- `types.ts`: types et enums métier.
-- `styles/`: feuilles CSS importées par `index.css`.
+## Expressions visuelles
+L'app tente de charger des images dans `public/expressions/1.png` à `20.png`.
+Si une image manque, l'avatar affiche un fallback emoji.
 
-## État actuel
-Le projet compile et se lance localement en mode développement et build de production.
+## Notes Backend / BDD
+- Ce dépôt ne contient pas de backend applicatif ni schéma SQL actif.
+- Le stockage est principalement en `localStorage`.
+- Donc aucune migration DB n'a été nécessaire dans cette itération.

@@ -11,12 +11,24 @@ export async function speakText(
     return;
   }
 
-  onStart?.();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = language;
-  utterance.pitch = settings.pitch;
-  utterance.rate = settings.rate;
-  utterance.onend = () => onEnd?.();
-  utterance.onerror = () => onEnd?.();
-  window.speechSynthesis.speak(utterance);
+  await new Promise<void>((resolve) => {
+    onStart?.();
+    const synth = window.speechSynthesis;
+    synth.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = language;
+    utterance.pitch = settings.pitch;
+    utterance.rate = settings.rate;
+    utterance.onend = () => {
+      onEnd?.();
+      resolve();
+    };
+    utterance.onerror = () => {
+      onEnd?.();
+      resolve();
+    };
+
+    synth.speak(utterance);
+  });
 }

@@ -1,14 +1,9 @@
-import { Language, UserProfile, Emotion } from '../types';
+import { Language, UserProfile } from '../types';
 import type { AIResponse } from './geminiService';
+import { generateLocalResponse } from './localAIService';
 
 export const simpleLocalAI = {
-  generateResponse(message: string, _profile: UserProfile, language: Language): AIResponse {
-    return {
-      text: language === Language.JP
-        ? `（Simple Local AI）${message}`
-        : `(Simple Local AI) ${message}`,
-      emotion: Emotion.NORMAL_SMILE,
-      thought: 'Réponse simple locale.'
-    };
+  generateResponse(message: string, profile: UserProfile, language: Language): AIResponse {
+    return generateLocalResponse(message, profile, language);
   }
 };

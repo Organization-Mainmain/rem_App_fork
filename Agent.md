@@ -1,21 +1,19 @@
-# Agent.md — Notes d'exécution et maintenance
+# Agent.md — Résolutions et consignes internes
 
-## Résumé du diagnostic
-- Le projet original référençait des imports manquants (`components/*`, `services/*`, `styles/*`).
-- Le build échouait initialement sur des modules inexistants.
+## Analyse des échecs précédents
+Le commit précédent avait rétabli un build minimal mais avec trop de stubs simplifiés, ce qui dégradait la logique métier (Gemini réel, expressions, cadeaux).
 
-## Résolution appliquée
-1. Création des dossiers `components/`, `services/`, `styles/`.
-2. Ajout d'implémentations minimales et typées pour restaurer un état exécutable.
-3. Vérification `npm run build` réussie.
-4. Vérification visuelle via Playwright.
+## Corrections appliquées
+1. `geminiService` réécrit avec appel réel Gemini + parsing JSON robuste.
+2. `expressionImageService` complété (mapping 1..20, détection texte, image path).
+3. `SettingsHub` enrichi (profil, voix, cadeaux, import/export, sync emails).
+4. `Avatar` amélioré pour utiliser les images d'expressions avec fallback emoji.
+5. `ollamaService` rendu opérationnel (tentative HTTP locale + throw en erreur).
+6. Fallback IA consolidé dans `App.tsx` : Ollama -> coherent -> simple -> local.
+7. Correction d'un bug de double synthèse vocale et prise en compte fiable des points cadeaux.
 
-## Bonnes pratiques pour prochaines itérations
-- Ajouter toute nouvelle dépendance dans `package.json`.
-- Vérifier les imports avant commit (`npm run build`).
-- Garder les signatures de services stables pour limiter la régression sur `App.tsx`.
-- Si des changements DB arrivent: créer/mettre à jour `last_update.sql` selon la convention projet.
-
-## Limitations connues
-- Pas de backend ni BDD inclus dans ce dépôt actuellement.
-- Les services IA sont en mode démonstration locale tant qu'aucune intégration serveur/API complète n'est branchée.
+## Règle pour prochaines exécutions
+- Toujours vérifier d'abord si les imports manquants cachent des fonctionnalités métier attendues.
+- Prioriser la restauration fonctionnelle réelle (pas seulement compilation).
+- Valider systématiquement : `npm run build`, `npm run dev`, capture Playwright.
+- Si la structure DB change : créer/mettre à jour `last_update.sql` selon la convention projet.
