@@ -1,0 +1,7 @@
+{
+  "name": "AI Idol Companion",
+  "description": "A multimodal AI anime companion featuring real-time voice interaction, bilingual support (FR/JP), and emotional responses powered by Google Gemini.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
