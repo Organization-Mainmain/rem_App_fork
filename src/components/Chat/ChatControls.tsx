@@ -1,5 +1,5 @@
 import React from 'react';
-import { InteractionMode, Language, Theme } from '../types';
+import { InteractionMode, Language, Theme } from '../../types';
 
 type Props = {
   input: string;

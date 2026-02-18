@@ -1,5 +1,5 @@
 import React from 'react';
-import { Message, Speaker, Theme } from '../types';
+import { Message, Speaker, Theme } from '../../types';
 
 type Props = {
   messages: Message[];

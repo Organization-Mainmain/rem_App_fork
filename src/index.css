@@ -1,9 +1,4 @@
 /* Import all CSS files */
-@import url('./styles/avatar.css');
-@import url('./styles/chat-history.css');
-@import url('./styles/expression-display.css');
-@import url('./styles/model-manager.css');
-@import url('./styles/settings-hub.css');
 
 /* Global styles */
 * {

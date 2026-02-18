@@ -1,6 +1,6 @@
 import React from 'react';
-import { AvatarState, Emotion } from '../types';
-import { expressionImageService } from '../services/expressionImageService';
+import { AvatarState, Emotion } from '../../types';
+import { expressionImageService } from '../../services/expressionImageService';
 
 const emojiFallbackByEmotion: Partial<Record<Emotion, string>> = {
   [Emotion.ATTENTIVE]: '🫶',

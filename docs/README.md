@@ -50,3 +50,13 @@ Si une image est absente, un fallback emoji est affiché.
 ## Notes
 - Le bouton **Conversation** permet maintenant de masquer/réafficher clairement l'historique.
 - En mode Gemini, une erreur explicite est levée si aucune clé n'est configurée.
+
+## État du dépôt vs demande `/ecole/#/absences`
+- Le dépôt courant ne contient pas de module école/absences (aucune route `/ecole`, aucun composant `absences`).
+- Les recherches dans le code confirment que ce repo est une application d'avatar conversationnel, pas le portail absences.
+- Pour implémenter la pagination des sessions d'absences et l'affichage des statuts “non lu”, il faut le dépôt qui porte effectivement cette page.
+
+## Vérifications techniques effectuées
+- Installation npm effectuée.
+- Build production vérifié (`npm run build`) après correction de chemins frontend cassés.
+- Démarrage local vérifié (`npm run dev -- --host 0.0.0.0 --port 3001`) et capture d'écran réalisée.

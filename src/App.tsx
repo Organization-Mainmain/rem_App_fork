@@ -10,13 +10,13 @@ import { speakText } from './services/speechService';
 import { getThemeStyles } from './services/themeService';
 import { fetchUnreadEmails } from './services/googleService';
 import { expressionImageService } from './services/expressionImageService';
-import Avatar from './components/Avatar';
-import ChatControls from './components/ChatControls';
-import ChatHistory from './components/ChatHistory';
-import SettingsHub from './components/SettingsHub';
-import LoadingScreen from './components/LoadingScreen';
-import Logo from './components/Logo';
-import ExpressionSettings from './components/ExpressionSettings';
+import Avatar from './components/Avatar/Avatar';
+import ChatControls from './components/Chat/ChatControls';
+import ChatHistory from './components/Chat/ChatHistory';
+import SettingsHub from './components/Settings/SettingsHub';
+import LoadingScreen from './components/UI/LoadingScreen';
+import Logo from './components/UI/Logo';
+import ExpressionSettings from './components/Settings/ExpressionSettings';
 import { Settings as SettingsIcon, Clock, Moon, Sun, ShieldCheck, Palette } from 'lucide-react';
 
 const STORAGE_KEYS = {

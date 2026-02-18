@@ -1,5 +1,5 @@
 import React from 'react';
-import { Theme } from '../types';
+import { Theme } from '../../types';
 
 export default function LoadingScreen({ theme }: { theme: Theme }) {
   return (
