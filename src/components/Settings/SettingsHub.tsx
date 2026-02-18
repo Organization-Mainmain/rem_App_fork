@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Emotion, Gift, UserProfile, VoiceSettings } from '../types';
+import { Emotion, Gift, UserProfile, VoiceSettings } from '../../types';
 
 const GIFTS: Gift[] = [
   { id: 'tea', name: 'Thé chaud', icon: '🍵', points: 3, label: 'Offrir un thé' },

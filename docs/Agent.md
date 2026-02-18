@@ -19,3 +19,14 @@
 ## Rappel DB
 - Aucun schéma SQL actif dans ce projet.
 - Si une DB est ajoutée/modifiée : créer/mettre à jour `last_update.sql` (et archiver vers `last_update_old.sql` si nécessaire).
+
+## Résolution supplémentaire (stabilité build)
+- Build cassé détecté et corrigé :
+  - imports CSS inexistants dans `src/index.css` supprimés.
+  - lien statique `/index.css` retiré de `index.html`.
+  - imports de composants corrigés dans `src/App.tsx`.
+  - imports relatifs `types/services` corrigés dans les composants sous-dossiers.
+
+## Diagnostic fonctionnel (demande absences)
+- La fonctionnalité `/ecole/#/absences` n'existe pas dans ce dépôt.
+- Action à prévoir pour prochaine exécution : demander/ouvrir le dépôt du portail école avant toute implémentation pagination/“non lu”.
